@@ -897,12 +897,20 @@ protocol InAppPurchase2API {
   func restorePurchases(completion: @escaping (Result<Void, Error>) -> Void)
   func countryCode(completion: @escaping (Result<String, Error>) -> Void)
   func sync(completion: @escaping (Result<Void, Error>) -> Void)
-  /// Returns the StoreKit2 `AppTransaction` JWS payload's `appTransactionId`,
-  /// suitable for use as the `transactionId` claim when minting an
-  /// introductory-offer-eligibility JWS for a user who has no prior App
-  /// Store transactions. Returns null on iOS < 16.0 (where AppTransaction
-  /// is unavailable) or if the AppTransaction is unverified.
-  func appTransactionId(completion: @escaping (Result<String?, Error>) -> Void)
+  /// Returns the StoreKit2 `AppTransaction.jwsRepresentation` — Apple's
+  /// signed JWS attesting to the user's Apple ID install of this app.
+  /// The host application sends this verbatim to its backend, which
+  /// verifies the signature against Apple's certificate chain and
+  /// extracts the authenticated `appTransactionId` for use as the
+  /// `transactionId` claim when minting an introductory-offer-eligibility
+  /// JWS (or for any other Apple-bound trust use case).
+  ///
+  /// Returns the JWS string regardless of the local verification
+  /// result — both `.verified` and `.unverified` payloads expose the
+  /// same JWS, and the backend is the authoritative trust boundary.
+  /// Returns null only on iOS < 16.0 / macOS < 13.0 where
+  /// `AppTransaction` is unavailable.
+  func appTransactionJws(completion: @escaping (Result<String?, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -1112,15 +1120,23 @@ class InAppPurchase2APISetup {
     } else {
       syncChannel.setMessageHandler(nil)
     }
-    /// Returns the StoreKit2 `AppTransaction` JWS payload's `appTransactionId`,
-    /// suitable for use as the `transactionId` claim when minting an
-    /// introductory-offer-eligibility JWS for a user who has no prior App
-    /// Store transactions. Returns null on iOS < 16.0 (where AppTransaction
-    /// is unavailable) or if the AppTransaction is unverified.
-    let appTransactionIdChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.in_app_purchase_storekit.InAppPurchase2API.appTransactionId\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    /// Returns the StoreKit2 `AppTransaction.jwsRepresentation` — Apple's
+    /// signed JWS attesting to the user's Apple ID install of this app.
+    /// The host application sends this verbatim to its backend, which
+    /// verifies the signature against Apple's certificate chain and
+    /// extracts the authenticated `appTransactionId` for use as the
+    /// `transactionId` claim when minting an introductory-offer-eligibility
+    /// JWS (or for any other Apple-bound trust use case).
+    ///
+    /// Returns the JWS string regardless of the local verification
+    /// result — both `.verified` and `.unverified` payloads expose the
+    /// same JWS, and the backend is the authoritative trust boundary.
+    /// Returns null only on iOS < 16.0 / macOS < 13.0 where
+    /// `AppTransaction` is unavailable.
+    let appTransactionJwsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.in_app_purchase_storekit.InAppPurchase2API.appTransactionJws\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      appTransactionIdChannel.setMessageHandler { _, reply in
-        api.appTransactionId { result in
+      appTransactionJwsChannel.setMessageHandler { _, reply in
+        api.appTransactionJws { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))
@@ -1130,7 +1146,7 @@ class InAppPurchase2APISetup {
         }
       }
     } else {
-      appTransactionIdChannel.setMessageHandler(nil)
+      appTransactionJwsChannel.setMessageHandler(nil)
     }
   }
 }

@@ -72,15 +72,16 @@ class InAppPurchaseStoreKitPlatformAddition
   Future<void> showPriceConsentIfNeeded() =>
       SKPaymentQueueWrapper().showPriceConsentIfNeeded();
 
-  /// Returns StoreKit 2's `AppTransaction.appTransactionID` — a stable
-  /// identifier of the user's Apple ID install of this app. Suitable as
-  /// the `transactionId` claim when minting an introductory-offer-eligibility
-  /// JWS for a user with no prior in-app purchases.
+  /// Returns StoreKit 2's `AppTransaction.jwsRepresentation` — Apple's
+  /// signed JWS attesting to the user's Apple ID install of this app.
+  /// The host application forwards this to its backend, which verifies
+  /// the signature (e.g. via `app-store-server-library`'s
+  /// `SignedDataVerifier.verifyAndDecodeAppTransaction`) and extracts
+  /// authenticated fields like `appTransactionId`.
   ///
-  /// Returns `null` on iOS < 16.0 / macOS < 13.0 (where `AppTransaction`
-  /// is unavailable) or if the `AppTransaction` is unverified.
-  /// StoreKit 2 only; will throw if invoked while running StoreKit 1.
-  Future<String?> appTransactionId() {
-    return AppStore().appTransactionId();
+  /// Returns `null` on iOS < 16.0 / macOS < 13.0 where `AppTransaction`
+  /// is unavailable. StoreKit 2 only.
+  Future<String?> appTransactionJws() {
+    return AppStore().appTransactionJws();
   }
 }

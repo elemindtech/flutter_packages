@@ -330,24 +330,25 @@ extension InAppPurchasePlugin: InAppPurchase2API {
     }
   }
 
-  /// Returns the StoreKit2 `AppTransaction.appTransactionID`, which uniquely
-  /// identifies the user's Apple ID install of this app. Suitable as the
-  /// `transactionId` claim when minting an introductory-offer-eligibility
-  /// JWS for a user with no prior in-app purchases.
+  /// Returns the StoreKit2 `AppTransaction.jwsRepresentation` — Apple's
+  /// signed JWS attesting to the user's Apple ID install of this app.
+  /// The host application is expected to forward the JWS to its backend
+  /// for signature verification (e.g. via Apple's app-store-server-library
+  /// `SignedDataVerifier.verifyAndDecodeAppTransaction`); the backend
+  /// then extracts authenticated fields like `appTransactionId`.
+  ///
+  /// Returns the JWS regardless of local verification result — the
+  /// backend is the authoritative trust boundary. Returns nil on
+  /// iOS < 16.0 / macOS < 13.0 where AppTransaction is unavailable.
   /// https://developer.apple.com/documentation/storekit/apptransaction
-  /// Returns nil on iOS < 16.0 / macOS < 14.0 where AppTransaction is
-  /// unavailable, or if the AppTransaction is unverified.
-  func appTransactionId(completion: @escaping (Result<String?, Error>) -> Void) {
+  func appTransactionJws(completion: @escaping (Result<String?, Error>) -> Void) {
     if #available(iOS 16.0, macOS 13.0, *) {
       Task {
         do {
           let verificationResult = try await AppTransaction.shared
-          switch verificationResult {
-          case .verified(let appTransaction):
-            completion(.success(appTransaction.appTransactionID))
-          case .unverified:
-            completion(.success(nil))
-          }
+          // unsafePayloadValue is intentional: both verified and unverified
+          // results carry the same JWS; the backend re-verifies.
+          completion(.success(verificationResult.unsafePayloadValue.jwsRepresentation))
         } catch {
           completion(
             .failure(

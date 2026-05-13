@@ -285,13 +285,21 @@ abstract class InAppPurchase2API {
   @async
   void sync();
 
-  /// Returns the StoreKit2 `AppTransaction` JWS payload's `appTransactionId`,
-  /// suitable for use as the `transactionId` claim when minting an
-  /// introductory-offer-eligibility JWS for a user who has no prior App
-  /// Store transactions. Returns null on iOS < 16.0 (where AppTransaction
-  /// is unavailable) or if the AppTransaction is unverified.
+  /// Returns the StoreKit2 `AppTransaction.jwsRepresentation` — Apple's
+  /// signed JWS attesting to the user's Apple ID install of this app.
+  /// The host application sends this verbatim to its backend, which
+  /// verifies the signature against Apple's certificate chain and
+  /// extracts the authenticated `appTransactionId` for use as the
+  /// `transactionId` claim when minting an introductory-offer-eligibility
+  /// JWS (or for any other Apple-bound trust use case).
+  ///
+  /// Returns the JWS string regardless of the local verification
+  /// result — both `.verified` and `.unverified` payloads expose the
+  /// same JWS, and the backend is the authoritative trust boundary.
+  /// Returns null only on iOS < 16.0 / macOS < 13.0 where
+  /// `AppTransaction` is unavailable.
   @async
-  String? appTransactionId();
+  String? appTransactionJws();
 }
 
 @FlutterApi()

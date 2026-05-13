@@ -22,18 +22,23 @@ final class AppStore {
     return hostApi2.sync();
   }
 
-  /// Dart wrapper for StoreKit2's `AppTransaction.shared.appTransactionID`.
+  /// Dart wrapper for StoreKit2's `AppTransaction.jwsRepresentation`.
   ///
-  /// Returns the unique identifier of the user's Apple ID install of this
-  /// app. Suitable as the `transactionId` claim when minting an
-  /// introductory-offer-eligibility JWS for users with no prior IAPs.
+  /// Returns the **signed JWS** attesting to the user's Apple ID install
+  /// of this app, suitable for forwarding to a backend that verifies the
+  /// signature with Apple's `app-store-server-library`
+  /// `SignedDataVerifier.verifyAndDecodeAppTransaction` and extracts
+  /// authenticated fields (like `appTransactionId`) from the trusted
+  /// payload.
   ///
-  /// Returns `null` when:
-  ///  - running on iOS < 16.0 / macOS < 13.0 (`AppTransaction` unavailable), or
-  ///  - the `AppTransaction.shared` verification result is `.unverified`.
+  /// Returns the JWS regardless of the local `VerificationResult` — the
+  /// backend is the authoritative trust boundary.
+  ///
+  /// Returns `null` when running on iOS < 16.0 / macOS < 13.0
+  /// (`AppTransaction` unavailable).
   ///
   /// https://developer.apple.com/documentation/storekit/apptransaction
-  Future<String?> appTransactionId() {
-    return hostApi2.appTransactionId();
+  Future<String?> appTransactionJws() {
+    return hostApi2.appTransactionJws();
   }
 }
