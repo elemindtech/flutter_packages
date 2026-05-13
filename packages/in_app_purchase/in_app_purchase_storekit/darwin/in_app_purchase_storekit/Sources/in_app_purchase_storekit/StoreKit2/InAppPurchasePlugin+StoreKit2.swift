@@ -346,9 +346,10 @@ extension InAppPurchasePlugin: InAppPurchase2API {
       Task {
         do {
           let verificationResult = try await AppTransaction.shared
-          // unsafePayloadValue is intentional: both verified and unverified
-          // results carry the same JWS; the backend re-verifies.
-          completion(.success(verificationResult.unsafePayloadValue.jwsRepresentation))
+          // jwsRepresentation is declared on VerificationResult<AppTransaction>
+          // itself (iOS 16+), so both `.verified` and `.unverified` cases
+          // expose the same signed string — the backend re-verifies it.
+          completion(.success(verificationResult.jwsRepresentation))
         } catch {
           completion(
             .failure(
