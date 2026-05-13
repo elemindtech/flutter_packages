@@ -21,4 +21,19 @@ final class AppStore {
   Future<void> sync() {
     return hostApi2.sync();
   }
+
+  /// Dart wrapper for StoreKit2's `AppTransaction.shared.appTransactionID`.
+  ///
+  /// Returns the unique identifier of the user's Apple ID install of this
+  /// app. Suitable as the `transactionId` claim when minting an
+  /// introductory-offer-eligibility JWS for users with no prior IAPs.
+  ///
+  /// Returns `null` when:
+  ///  - running on iOS < 16.0 / macOS < 13.0 (`AppTransaction` unavailable), or
+  ///  - the `AppTransaction.shared` verification result is `.unverified`.
+  ///
+  /// https://developer.apple.com/documentation/storekit/apptransaction
+  Future<String?> appTransactionId() {
+    return hostApi2.appTransactionId();
+  }
 }

@@ -168,6 +168,8 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
           promotionalOffer: _convertPromotionalOffer(
             purchaseParam.promotionalOffer,
           ),
+          introductoryOfferEligibilityJws:
+              purchaseParam.introductoryOfferEligibilityJWS,
         );
       } else {
         options = SK2ProductPurchaseOptions(
@@ -175,6 +177,10 @@ class InAppPurchaseStoreKitPlatform extends InAppPurchasePlatform {
               ? purchaseParam.quantity
               : 1,
           appAccountToken: purchaseParam.applicationUserName,
+          introductoryOfferEligibilityJws:
+              purchaseParam is AppStorePurchaseParam
+              ? purchaseParam.introductoryOfferEligibilityJWS
+              : null,
         );
       }
 

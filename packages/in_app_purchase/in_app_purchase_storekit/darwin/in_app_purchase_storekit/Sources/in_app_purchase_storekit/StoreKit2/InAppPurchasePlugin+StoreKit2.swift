@@ -85,6 +85,15 @@ extension InAppPurchasePlugin: InAppPurchase2API {
           }
         }
 
+        // Product.PurchaseOption.introductoryOfferEligibility(compactJWS:) is
+        // declared iOS 18.4 / macOS 15.4 in the SDK headers but Apple back-
+        // deploys it to iOS 15 / macOS 12. The outer extension is already
+        // @available(iOS 15.0, macOS 12.0, *), so the call is reachable at
+        // runtime on iOS 15+; iOS 13/14 users skip the SK2 path entirely.
+        if let jws = options?.introductoryOfferEligibilityJws, !jws.isEmpty {
+          purchaseOptions.insert(.introductoryOfferEligibility(compactJWS: jws))
+        }
+
         let result = try await product.purchase(options: purchaseOptions)
 
         switch result {
@@ -318,6 +327,38 @@ extension InAppPurchasePlugin: InAppPurchase2API {
       }
       completion(.success(currentStorefront.countryCode))
       return
+    }
+  }
+
+  /// Returns the StoreKit2 `AppTransaction.appTransactionID`, which uniquely
+  /// identifies the user's Apple ID install of this app. Suitable as the
+  /// `transactionId` claim when minting an introductory-offer-eligibility
+  /// JWS for a user with no prior in-app purchases.
+  /// https://developer.apple.com/documentation/storekit/apptransaction
+  /// Returns nil on iOS < 16.0 / macOS < 14.0 where AppTransaction is
+  /// unavailable, or if the AppTransaction is unverified.
+  func appTransactionId(completion: @escaping (Result<String?, Error>) -> Void) {
+    if #available(iOS 16.0, macOS 13.0, *) {
+      Task {
+        do {
+          let verificationResult = try await AppTransaction.shared
+          switch verificationResult {
+          case .verified(let appTransaction):
+            completion(.success(appTransaction.appTransactionID))
+          case .unverified:
+            completion(.success(nil))
+          }
+        } catch {
+          completion(
+            .failure(
+              PigeonError(
+                code: "storekit2_failed_to_fetch_app_transaction",
+                message: "Storekit has failed to fetch the AppTransaction.",
+                details: "\(error)")))
+        }
+      }
+    } else {
+      completion(.success(nil))
     }
   }
 

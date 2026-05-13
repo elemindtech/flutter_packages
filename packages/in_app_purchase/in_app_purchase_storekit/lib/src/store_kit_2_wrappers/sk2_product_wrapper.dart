@@ -295,6 +295,7 @@ class SK2ProductPurchaseOptions {
     this.quantity,
     this.promotionalOffer,
     this.winBackOfferId,
+    this.introductoryOfferEligibilityJws,
   });
 
   /// Sets a UUID to associate the purchase with an account in your system.
@@ -309,6 +310,10 @@ class SK2ProductPurchaseOptions {
   /// Sets a win back offer to a purchase.
   final String? winBackOfferId;
 
+  /// Server-signed JWS asserting the user's eligibility for the product's
+  /// introductory offer. See `AppStorePurchaseParam.introductoryOfferEligibilityJWS`.
+  final String? introductoryOfferEligibilityJws;
+
   /// Convert to pigeon representation [SK2ProductPurchaseOptionsMessage].
   SK2ProductPurchaseOptionsMessage convertToPigeon() {
     return SK2ProductPurchaseOptionsMessage(
@@ -316,6 +321,7 @@ class SK2ProductPurchaseOptions {
       quantity: quantity,
       winBackOfferId: winBackOfferId,
       promotionalOffer: promotionalOffer,
+      introductoryOfferEligibilityJws: introductoryOfferEligibilityJws,
     );
   }
 }

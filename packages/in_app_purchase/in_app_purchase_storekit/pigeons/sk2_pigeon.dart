@@ -161,12 +161,19 @@ class SK2ProductPurchaseOptionsMessage {
     this.quantity = 1,
     this.promotionalOffer,
     this.winBackOfferId,
+    this.introductoryOfferEligibilityJws,
   });
 
   final String? appAccountToken;
   final int? quantity;
   final SK2SubscriptionOfferPurchaseMessage? promotionalOffer;
   final String? winBackOfferId;
+
+  /// Compact JWS signed by the developer's App Store key asserting whether
+  /// this user is eligible for the product's introductory offer. When set
+  /// with `eligible=false`, StoreKit suppresses the intro offer for this
+  /// purchase. iOS 18.4+ SDK; back-deploys to iOS 15.0 at runtime.
+  final String? introductoryOfferEligibilityJws;
 }
 
 class SK2TransactionMessage {
@@ -277,6 +284,14 @@ abstract class InAppPurchase2API {
 
   @async
   void sync();
+
+  /// Returns the StoreKit2 `AppTransaction` JWS payload's `appTransactionId`,
+  /// suitable for use as the `transactionId` claim when minting an
+  /// introductory-offer-eligibility JWS for a user who has no prior App
+  /// Store transactions. Returns null on iOS < 16.0 (where AppTransaction
+  /// is unavailable) or if the AppTransaction is unverified.
+  @async
+  String? appTransactionId();
 }
 
 @FlutterApi()

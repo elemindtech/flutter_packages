@@ -15,6 +15,7 @@ class AppStorePurchaseParam extends PurchaseParam {
     this.quantity = 1,
     this.simulatesAskToBuyInSandbox = false,
     this.discount,
+    this.introductoryOfferEligibilityJWS,
   });
 
   /// Set it to `true` to produce an "ask to buy" flow for this payment in the
@@ -33,4 +34,10 @@ class AppStorePurchaseParam extends PurchaseParam {
 
   /// Discount applied to the product. The value is `null` when the product does not have a discount.
   final SKPaymentDiscountWrapper? discount;
+
+  /// Compact JWS signed by your server asserting the user's eligibility for
+  /// the product's introductory offer. When non-null and `eligible=false`,
+  /// StoreKit suppresses the intro offer at purchase time. Only used on the
+  /// StoreKit 2 path; ignored on StoreKit 1.
+  final String? introductoryOfferEligibilityJWS;
 }

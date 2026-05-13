@@ -16,6 +16,7 @@ class Sk2PurchaseParam extends PurchaseParam {
     this.quantity = 1,
     this.winBackOfferId,
     this.promotionalOffer,
+    this.introductoryOfferEligibilityJWS,
   });
 
   /// Creates a [Sk2PurchaseParam] from a [ProductDetails] and a [SK2SubscriptionOffer].
@@ -60,4 +61,9 @@ class Sk2PurchaseParam extends PurchaseParam {
 
   /// The promotional offer identifier to apply to the purchase.
   final SK2PromotionalOffer? promotionalOffer;
+
+  /// Compact JWS signed by your server asserting the user's eligibility for
+  /// the product's introductory offer. When non-null and `eligible=false`,
+  /// StoreKit suppresses the intro offer at purchase time.
+  final String? introductoryOfferEligibilityJWS;
 }
